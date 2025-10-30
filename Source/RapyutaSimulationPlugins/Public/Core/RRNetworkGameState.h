@@ -28,5 +28,5 @@ public:
      *
      * @return float
      */
-    virtual double GetServerWorldTimeSeconds() const override;
+    virtual float GetServerWorldTimeSeconds() const override;
 };
