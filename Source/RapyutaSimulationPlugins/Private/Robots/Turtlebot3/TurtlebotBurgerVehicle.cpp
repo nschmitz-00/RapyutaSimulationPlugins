@@ -2,6 +2,9 @@
 
 #include "Robots/Turtlebot3/TurtlebotBurgerVehicle.h"
 
+#include "Robots/RRBaseRobotROSController.h"
+#include "Robots/Turtlebot3/RRTurtlebotROS2Interface.h"
+
 ATurtlebotBurgerVehicle::ATurtlebotBurgerVehicle()
 {
     SetupDefaultRootSkeletal();

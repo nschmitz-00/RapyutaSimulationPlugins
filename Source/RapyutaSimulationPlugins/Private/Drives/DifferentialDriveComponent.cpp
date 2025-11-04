@@ -8,6 +8,7 @@
 // RapyutaSimulationPlugins
 #include "Core/RRConversionUtils.h"
 #include "Core/RRGeneralUtils.h"
+#include "Kismet/KismetMathLibrary.h"
 
 void UDifferentialDriveComponent::SetWheels(UPhysicsConstraintComponent* InWheelLeft, UPhysicsConstraintComponent* InWheelRight, UStaticMeshComponent* InWheelLeftLink, UStaticMeshComponent* InWheelRightLink)
 {
