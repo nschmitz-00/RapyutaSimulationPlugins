@@ -126,27 +126,27 @@ public:
 
     //! [kg/ss]
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
-    float LinearSpring = 1000;
+    float LinearSpring = 1000.f;
 
     //! [kg/s]
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
-    float LinearDamper = 10;
+    float LinearDamper = 10.f;
 
     //! [kg.cm/ss]
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
-    float LinearForceLimit = UE_BIG_NUMBER;
+    float LinearForceLimit = 1000000.f;
 
     //! [kg.cm/ss]
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
-    float AngularSpring = 100000;
+    float AngularSpring = 100000.f;
 
     //! [kg.cm/s]
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
-    float AngularDamper = 10000;
+    float AngularDamper = 10000.f;
 
     //! [kg.deg.deg/ss]
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
-    float AngularForceLimit = UE_BIG_NUMBER;
+    float AngularForceLimit = 1000000.f;
 
     //! if false, physics constraints parameters are set from #SetJoint .
     //! Plese set true if you want to set physics constraints parameter manually.

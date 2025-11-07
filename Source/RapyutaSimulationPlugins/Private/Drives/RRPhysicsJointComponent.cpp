@@ -111,7 +111,7 @@ void URRPhysicsJointComponent::SetVelocityTarget(const FVector& InLinearVelocity
     Constraint->SetAngularVelocityDrive(true, true);
     Constraint->SetLinearPositionDrive(false, false, false);
     Constraint->SetAngularOrientationDrive(false, false);
-    Constraint->SetAngularDriveParams(0, AngularDamper, AngularForceLimit);
+    Constraint->SetAngularDriveParams(0.f, AngularDamper, AngularForceLimit);
 
     // set velocity target
     Super::SetVelocityTarget(InLinearVelocity, InAngularVelocity);
