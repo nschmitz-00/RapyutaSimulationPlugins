@@ -411,5 +411,6 @@ void URRPhysicsJointComponent::Teleport(const FVector& InPosition, const FRotato
 
 void URRPhysicsJointComponent::MoveToInitPose()
 {
+    UE_LOG_WITH_INFO_SHORT_NAMED(LogRapyutaCore, Warning, TEXT("Moving Joint to initial position: %s"), *InitialOrientation.ToString());
     SetPoseTarget(InitialPosition, InitialOrientation);
 }

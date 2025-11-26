@@ -82,7 +82,7 @@ public:
      */
     virtual void Teleport(const FVector& InPosition, const FRotator& InOrientation) override;
 
-    virtual void MoveToInitPose();
+    virtual void MoveToInitPose() override;
 
     /**
      * Set joints parameter and etc

@@ -31,7 +31,8 @@ ARRBaseRobot::ARRBaseRobot()
     SetupDefault();
 }
 
-ARRBaseRobot::ARRBaseRobot(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
+ARRBaseRobot::ARRBaseRobot(const FObjectInitializer& ObjectInitializer)
+    : Super(ObjectInitializer)
 {
     SetupDefault();
 }
@@ -118,7 +119,10 @@ bool ARRBaseRobot::IsAuthorizedInThisClient()
         else if (ROS2Interface->ROSSpawnParameters->GetNetworkPlayerId() == npc->ROS2SimStateClient->GetNetworkPlayerId())
         {
             UE_LOG_WITH_INFO_NAMED(
-                LogRapyutaCore, Log, TEXT("PlayerId is matched. PlayerId=%d."), npc->GetPlayerState<APlayerState>()->GetPlayerId());
+                LogRapyutaCore,
+                Log,
+                TEXT("PlayerId is matched. PlayerId=%d."),
+                npc->GetPlayerState<APlayerState>()->GetPlayerId());
             res = true;
         }
         else
@@ -171,7 +175,7 @@ void ARRBaseRobot::PreInitializeComponents()
             UE_LOG_WITH_INFO_NAMED(LogRapyutaCore,
                                    Warning,
                                    TEXT("ROS2InterfaceClass has not been configured, "
-                                        "probably later in child BP class!"));
+                                       "probably later in child BP class!"));
         }
     }
 
@@ -284,12 +288,19 @@ void ARRBaseRobot::CreateROS2Interface()
     // + Child class' ros2-related accessories (ROS 2 node, sensors, publishers/subscribers)
     //  may have not been fully accessible until then.
 }
+
 void ARRBaseRobot::InitROS2Interface()
 {
     if (!InitROS2InterfaceImpl())
     {
         GetWorld()->GetTimerManager().SetTimer(
-            ROS2InitTimer, FTimerDelegate::CreateLambda([this] { InitROS2InterfaceImpl(); }), 1.0f, true);
+            ROS2InitTimer,
+            FTimerDelegate::CreateLambda([this]
+            {
+                InitROS2InterfaceImpl();
+            }),
+            1.0f,
+            true);
     }
 }
 
@@ -377,7 +388,9 @@ bool ARRBaseRobot::InitMoveComponent()
     {
         // (NOTE) Being created in [OnConstruction], PIE will cause this to be reset anyway, thus requires recreation
         SetMoveComponent(CastChecked<UMovementComponent>(URRUObjectUtils::CreateSelfSubobject(
-            this, VehicleMoveComponentClass, FString::Printf(TEXT("%sMoveComp"), *GetName()))));
+            this,
+            VehicleMoveComponentClass,
+            FString::Printf(TEXT("%sMoveComp"), *GetName()))));
 
         UE_LOG_WITH_INFO(LogRapyutaCore,
                          Display,
@@ -388,7 +401,9 @@ bool ARRBaseRobot::InitMoveComponent()
     else
     {
         UE_LOG_WITH_INFO_NAMED(
-            LogRapyutaCore, Warning, TEXT("VehicleMoveComponentClass has not been configured, probably later in child BP class!"));
+            LogRapyutaCore,
+            Warning,
+            TEXT("VehicleMoveComponentClass has not been configured, probably later in child BP class!"));
     }
 
     if (bInitRobotVehicleMoveComponent)
@@ -453,7 +468,10 @@ void ARRBaseRobot::SetJointState(const TMap<FString, TArray<float>>& InJointStat
         else
         {
             UE_LOG_WITH_INFO_NAMED(
-                LogRapyutaCore, Warning, TEXT("[%s] [ARRBaseRobot] [SetJointState] do not have joint named %s "), *joint.Key);
+                LogRapyutaCore,
+                Warning,
+                TEXT("[%s] [ARRBaseRobot] [SetJointState] do not have joint named %s "),
+                *joint.Key);
         }
     }
 }
@@ -549,7 +567,9 @@ void ARRBaseRobot::SetLocalAngularVel(const FVector& InAngularVel)
 void ARRBaseRobot::InitUIWidget()
 {
     UIWidgetComp = URRUObjectUtils::CreateAndAttachChildComponent<URRUIWidgetComponent>(
-        this, *FString::Printf(TEXT("%sUIWidget"), *GetName()), UIWidgetOffset);
+        this,
+        *FString::Printf(TEXT("%sUIWidget"), *GetName()),
+        UIWidgetOffset);
 
     UIWidgetComp->UIUserWidgetClass = UIUserWidgetClass;
 
@@ -586,6 +606,7 @@ void ARRBaseRobot::BeginPlay()
     if (bInitializeJoints)
     {
         StartJointsInitialization();
+        UE_LOG_WITH_INFO(LogRapyutaCore, Warning, TEXT("Initialized joints!"));
     }
 }
 
@@ -715,6 +736,11 @@ bool ARRBaseRobot::AddLink(const FString& InLinkName, UStaticMeshComponent* InMe
     }
 
     Links.Add(InLinkName, InMesh);
+    UE_LOG_WITH_INFO_SHORT_NAMED(
+            LogRapyutaCore,
+            Log,
+            TEXT("Added link \'%s\'."),
+            *InLinkName);
     return true;
 }
 
@@ -723,15 +749,38 @@ bool ARRBaseRobot::AddJoint(const FString& InParentLinkName,
                             const FString& InJointName,
                             URRJointComponent* InJoint)
 {
-    if (!Links.Contains(InParentLinkName) || !Links.Contains(InChildLinkName))
+    if (!Links.Contains(InParentLinkName))
     {
         UE_LOG_WITH_INFO_SHORT_NAMED(
-            LogRapyutaCore, Error, TEXT("Links don\'t have %s and/or %s."), *InParentLinkName, *InChildLinkName);
+            LogRapyutaCore,
+            Error,
+            TEXT("Tried to generate joint between \'%s\' and \'%s\', but links don\'t have \'%s\'."),
+            *InChildLinkName,
+            *InParentLinkName,
+            *InParentLinkName);
+        return false;
+    }
+    if (!Links.Contains(InChildLinkName))
+    {
+        UE_LOG_WITH_INFO_SHORT_NAMED(
+            LogRapyutaCore,
+            Error,
+            TEXT("Tried to generate joint between \'%s\' and \'%s\', but links don\'t have \'%s\'."),
+            *InChildLinkName,
+            *InParentLinkName,
+            *InChildLinkName);
         return false;
     }
 
     InJoint->ParentLink = Links[InParentLinkName];
     InJoint->ChildLink = Links[InChildLinkName];
     Joints.Add(InJointName, InJoint);
+    UE_LOG_WITH_INFO_SHORT_NAMED(
+            LogRapyutaCore,
+            Log,
+            TEXT("Generated joint \'%s\' between \'%s\' and \'%s\'."),
+            *InJointName,
+            *InChildLinkName,
+            *InParentLinkName);
     return true;
 }
