@@ -11,6 +11,7 @@ URRJointComponent::URRJointComponent()
 
 bool URRJointComponent::IsValid()
 {
+    UE_LOG_WITH_INFO(LogTemp, Log, TEXT("Validating Joint \'%s\': ChildLink is \'%s\', ParentLink is \'%s\'"), *this->GetName(), *ChildLink->GetName(), *ParentLink->GetName());
     return ChildLink && ParentLink;
 }
 

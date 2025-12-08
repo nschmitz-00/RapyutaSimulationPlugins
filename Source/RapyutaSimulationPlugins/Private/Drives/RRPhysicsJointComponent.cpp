@@ -21,6 +21,10 @@ URRPhysicsJointComponent::URRPhysicsJointComponent()
 
 bool URRPhysicsJointComponent::IsValid()
 {
+    if (!Constraint)
+    {
+        UE_LOG_WITH_INFO_NAMED(LogTemp, Error, TEXT("JointComponent must have Physics Constraints!"));
+    }
     return Super::IsValid() && Constraint;
 }
 
