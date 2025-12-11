@@ -16,8 +16,6 @@
 // RapyutaSimulationPlugins
 #include "Sensors/RRBaseOdomComponent.h"
 
-//Thirdparty
-#include "filter.hpp"
 
 #include "RobotVehicleMovementComponent.generated.h"
 
@@ -120,13 +118,6 @@ public:
     UFUNCTION(BlueprintCallable)
     virtual void Initialize();
 
-    /**
-     * @brief Initialize Velocity filters.
-     *
-     */
-    UFUNCTION(BlueprintCallable)
-    virtual void InitVelFilters();
-
     //! @todo is this necessary?
     UPROPERTY()
     int8 InversionFactor = 1;
@@ -161,14 +152,6 @@ public:
     //! Odometry source
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
     URRBaseOdomComponent* OdomComponent = nullptr;
-
-    //! Low Pass filter Time constant of linear velocity commands
-    UPROPERTY(EditAnywhere, BlueprintReadWrite)
-    FVector LinearVelFilterTau = FVector::ZeroVector;
-
-    //! Low Pass filter Time constant of angular velocity commands
-    UPROPERTY(EditAnywhere, BlueprintReadWrite)
-    FVector AngVelFilterTau = FVector::ZeroVector;
 
 protected:
     virtual bool IsSupportedForNetworking() const override
@@ -209,10 +192,4 @@ protected:
     //! internal property used to log throttle.
     UPROPERTY()
     float LogLastHit = 0.f;
-
-    //! Linear Velocity Filter
-    TStaticArray<FirstOrderSystem, 3> LinearVelFilter;
-
-    //! Angular Velocity Filter
-    TStaticArray<FirstOrderSystem, 3> AngVelFilter;
 };

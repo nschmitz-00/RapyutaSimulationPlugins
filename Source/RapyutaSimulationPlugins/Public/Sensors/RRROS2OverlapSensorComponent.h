@@ -59,7 +59,6 @@ public:
     TArray<UObject*> TargetObjects;
 
     //! Add name of TargetObject to #Overlaps and #BindCallback
-    UFUNCTION(BlueprintCallable)
     void AddTarget(UObject* InTargetObject);
 
     //! Bind OnComponentBeginOverlap. OnComponentEndOverlap, OnActorBeginOverlap and OnActorEndOverlap

@@ -5,6 +5,9 @@
 // rclUE
 #include "Msgs/ROS2TFMsg.h"
 #include "rclcUtilities.h"
+#include "Core/RRConversionUtils.h"
+#include "Kismet/GameplayStatics.h"
+#include "Drives/RRJointComponent.h"
 
 URRROS2TFPublisherBase::URRROS2TFPublisherBase()
 {

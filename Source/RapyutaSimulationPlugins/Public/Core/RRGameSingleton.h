@@ -7,6 +7,9 @@
 
 #pragma once
 
+// Native
+#include <type_traits>
+
 // UE
 #include "CoreMinimal.h"
 #include "Engine/AssetManager.h"
@@ -32,32 +35,31 @@
 class URRPakLoader;
 
 template<const ERRResourceDataType InDataType>
-using URRAssetObject = typename TChooseClass<
+using URRAssetObject = std::conditional_t<
     (ERRResourceDataType::UE_STATIC_MESH == InDataType),
     UStaticMesh,
-    typename TChooseClass<
+    std::conditional_t<
         (ERRResourceDataType::UE_SKELETAL_MESH == InDataType),
         USkeletalMesh,
-        typename TChooseClass<
+        std::conditional_t<
             (ERRResourceDataType::UE_SKELETON == InDataType),
             USkeleton,
-            typename TChooseClass<
+            std::conditional_t<
                 (ERRResourceDataType::UE_PHYSICS_ASSET == InDataType),
                 UPhysicsAsset,
-                typename TChooseClass<
+                std::conditional_t<
                     (ERRResourceDataType::UE_MATERIAL == InDataType),
                     UMaterialInterface,
-                    typename TChooseClass<
+                    std::conditional_t<
                         (ERRResourceDataType::UE_PHYSICAL_MATERIAL == InDataType),
                         UPhysicalMaterial,
-                        typename TChooseClass<
+                        std::conditional_t<
                             (ERRResourceDataType::UE_TEXTURE == InDataType),
                             UTexture,
-                            typename TChooseClass<
+                            std::conditional_t<
                                 (ERRResourceDataType::UE_DATA_TABLE == InDataType),
                                 UDataTable,
-                                typename TChooseClass<(ERRResourceDataType::UE_BODY_SETUP == InDataType), UBodySetup, UObject>::
-                                    Result>::Result>::Result>::Result>::Result>::Result>::Result>::Result>::Result;
+                                std::conditional_t<(ERRResourceDataType::UE_BODY_SETUP == InDataType), UBodySetup, UObject>>>>>>>>>;
 
 /**
  * @brief GameSingleton class which handles asset loading.
@@ -72,6 +74,7 @@ UCLASS(Config = RapyutaSimSettings)
 class RAPYUTASIMULATIONPLUGINS_API URRGameSingleton : public UObject
 {
     GENERATED_BODY()
+
 protected:
     URRGameSingleton();
 
@@ -128,9 +131,7 @@ public:
     static constexpr const TCHAR* ASSETS_ROOT_PATH = TEXT("/");
     static constexpr const TCHAR* ASSETS_PROJECT_BASE_MODULE_NAME = TEXT("Game");
     static constexpr const TCHAR* ASSETS_PROJECT_MODULE_NAME = TEXT("Game/RapyutaContents");
-
-    UPROPERTY(config)
-    FIntPoint ASSETS_THUMBNAIL_SIZE = {512, 512};
+    
 
     //! Base path whereby runtime-created blueprint classes are saved, ideally in Project, so it could reference all plugins' assets.
     UPROPERTY(Config)
@@ -382,7 +383,10 @@ public:
         {
             resourceInfo.bHasBeenAllLoaded = true;
             UE_LOG_WITH_INFO(
-                LogTemp, Warning, TEXT("THERE IS NO [%s] TO BE LOADED"), *URRTypeUtils::GetERRResourceDataTypeAsString(InDataType));
+                LogTemp,
+                Warning,
+                TEXT("THERE IS NO [%s] TO BE LOADED"),
+                *URRTypeUtils::GetERRResourceDataTypeAsString(InDataType));
             return true;
         }
 
@@ -397,7 +401,7 @@ public:
                          resourceInfo.ToBeAsyncLoadedResourceNum);
 #endif
 
-        UAssetManager* assetManager = UAssetManager::GetIfValid();
+        UAssetManager* assetManager = UAssetManager::GetIfInitialized();
         if (assetManager)
         {
             for (const auto& resourceMetaData : resourceInfo.Data)
@@ -578,7 +582,7 @@ public:
             UE_LOG_WITH_INFO_SHORT(LogTemp,
                                    Error,
                                    TEXT("It seems [ResourceMap][%s] has not yet been fully initialized! Make sure GameMode class "
-                                        "is child of RRGameMode."),
+                                       "is child of RRGameMode."),
                                    *URRTypeUtils::GetERRResourceDataTypeAsString(InDataType));
             return nullptr;
         }
@@ -617,9 +621,9 @@ public:
                         UE_LOG_WITH_INFO_SHORT(LogTemp,
                                                Error,
                                                TEXT("[%s] [Unique Name: %s] INVALID STATIC RESOURCE PATH [%s]!\n"
-                                                    "Please consider adding its containing folder asset path (Eg: "
-                                                    "'/RapyutaSimulationPlugins/DynamicContents') to "
-                                                    "[DirectoriesToAlwaysCook] in DefaultGame.ini"),
+                                                   "Please consider adding its containing folder asset path (Eg: "
+                                                   "'/RapyutaSimulationPlugins/DynamicContents') to "
+                                                   "[DirectoriesToAlwaysCook] in DefaultGame.ini"),
                                                *URRTypeUtils::GetERRResourceDataTypeAsString(InDataType),
                                                *InResourceUniqueName,
                                                *resourceAssetPath);
@@ -754,12 +758,17 @@ public:
 
     static ERRShapeType GetShapeTypeFromMeshName(const FString& InMeshName)
     {
-        return InMeshName.Equals(SHAPE_NAME_PLANE)      ? ERRShapeType::PLANE
-               : InMeshName.Equals(SHAPE_NAME_CUBE)     ? ERRShapeType::BOX
-               : InMeshName.Equals(SHAPE_NAME_CYLINDER) ? ERRShapeType::CYLINDER
-               : InMeshName.Equals(SHAPE_NAME_SPHERE)   ? ERRShapeType::SPHERE
-               : InMeshName.Equals(SHAPE_NAME_CAPSULE)  ? ERRShapeType::CAPSULE
-                                                        : ERRShapeType::MESH;
+        return InMeshName.Equals(SHAPE_NAME_PLANE)
+                   ? ERRShapeType::PLANE
+                   : InMeshName.Equals(SHAPE_NAME_CUBE)
+                   ? ERRShapeType::BOX
+                   : InMeshName.Equals(SHAPE_NAME_CYLINDER)
+                   ? ERRShapeType::CYLINDER
+                   : InMeshName.Equals(SHAPE_NAME_SPHERE)
+                   ? ERRShapeType::SPHERE
+                   : InMeshName.Equals(SHAPE_NAME_CAPSULE)
+                   ? ERRShapeType::CAPSULE
+                   : ERRShapeType::MESH;
     }
 
     /**

@@ -13,6 +13,7 @@
 
 // Native
 #include <mutex>
+#include <type_traits>
 
 // UE
 #include "Engine.h"
@@ -27,16 +28,29 @@
 
 #include "RRActorCommon.generated.h"
 
-#define RAPYUTA_SIM_VERBOSE (0)    // todo make this CVar
+#ifndef RAPYUTA_SIM_VERBOSE
+#define RAPYUTA_SIM_VERBOSE (0)
+#endif
 
-//! NOTES: These 2 DEBUG directives are used mainly for ref code annnotation, thus must NEVER be turned on here globally!
+#ifndef RAPYUTA_SIM_DEBUG
 #define RAPYUTA_SIM_DEBUG (0)
+#endif
+
+#ifndef RAPYUTA_SIM_VISUAL_DEBUG
 #define RAPYUTA_SIM_VISUAL_DEBUG (0)
+#endif
 
+#ifndef RAPYUTA_USE_SCENE_DIRECTOR
 #define RAPYUTA_USE_SCENE_DIRECTOR (0)
+#endif
 
+#ifndef RAPYUTA_RUNTIME_MESH_ENTITY_USE_STATIC_MESH
 #define RAPYUTA_RUNTIME_MESH_ENTITY_USE_STATIC_MESH (1)
-#define RAPYUTA_RUNTIME_MESH_ENTITY_USE_PROCEDURAL_MESH (!RAPYUTA_RUNTIME_MESH_ENTITY_USE_STATIC_MESH)
+#endif
+
+#ifndef RAPYUTA_RUNTIME_MESH_ENTITY_USE_PROCEDURAL_MESH
+#define RAPYUTA_RUNTIME_MESH_ENTITY_USE_PROCEDURAL_MESH (RAPYUTA_RUNTIME_MESH_ENTITY_USE_STATIC_MESH == 0)
+#endif
 
 class ARRGameState;
 class ARRMeshActor;
@@ -87,7 +101,8 @@ struct RAPYUTASIMULATIONPLUGINS_API FRRAsyncJob
         }
 
         //! TFuture is move-only, only exposing a move-ctor
-        FRRSingleAsyncTask(TFuture<TResult>&& InAsyncTask) : Task(MoveTemp(InAsyncTask))
+        FRRSingleAsyncTask(TFuture<TResult>&& InAsyncTask)
+            : Task(MoveTemp(InAsyncTask))
         {
         }
 
@@ -108,9 +123,11 @@ struct RAPYUTASIMULATIONPLUGINS_API FRRAsyncJob
         }
     };
 
-    explicit FRRAsyncJob(const FString& InJobName) : JobName(InJobName)
+    explicit FRRAsyncJob(const FString& InJobName)
+        : JobName(InJobName)
     {
     }
+
     FRRAsyncJob(FRRAsyncJob&& Other)
     {
         verify(AsyncTasks.Num() == Other.AsyncTasks.Num());
@@ -180,7 +197,12 @@ struct RAPYUTASIMULATIONPLUGINS_API FRRAsyncJob
         else
         {
             UE_LOG_WITH_INFO(
-                LogTemp, Error, TEXT("[%s] FRRAsyncJob Invalid Async Task Index: %d/%d"), *TaskName, TaskIndex, GetTasksNum());
+                LogTemp,
+                Error,
+                TEXT("[%s] FRRAsyncJob Invalid Async Task Index: %d/%d"),
+                *TaskName,
+                TaskIndex,
+                GetTasksNum());
         }
     }
 
@@ -216,7 +238,8 @@ struct RAPYUTASIMULATIONPLUGINS_API FRRHomoMeshEntityGroup
     {
     }
 
-    FRRHomoMeshEntityGroup(TArray<ARRMeshActor*> InEntities) : Entities(MoveTemp(InEntities))
+    FRRHomoMeshEntityGroup(TArray<ARRMeshActor*> InEntities)
+        : Entities(MoveTemp(InEntities))
     {
     }
 
@@ -245,6 +268,7 @@ struct RAPYUTASIMULATIONPLUGINS_API FRRHomoMeshEntityGroup
     {
         return Entities.Num();
     }
+
     //! Get Entities Group's common model name
     FString GetGroupModelName() const;
 
@@ -317,9 +341,9 @@ struct RAPYUTASIMULATIONPLUGINS_API FRREntityLogInfo
 };
 
 template<int8 InBitDepth>
-using FRRColor = typename TChooseClass<(8 == InBitDepth),
-                                       FColor,
-                                       typename TChooseClass<(16 == InBitDepth), FFloat16Color, FLinearColor>::Result>::Result;
+using FRRColor = std::conditional_t<(8 == InBitDepth),
+                                    FColor,
+                                    std::conditional_t<(16 == InBitDepth), FFloat16Color, FLinearColor>>;
 
 // (NOTE) TImagePixelData could be used instead
 USTRUCT()
@@ -550,7 +574,7 @@ public:
     static constexpr const TCHAR* UNDERSCORE_STR = TEXT("_");
     static constexpr const char* NAN_STR = "NaN";
     static const std::string QUOTED_NAN_STR;
-    static constexpr const char* NONE_STR = "None";    // or NAME_None ?
+    static constexpr const char* NONE_STR = "None"; // or NAME_None ?
     static constexpr const char* NULL_STR = "Null";
     static const std::string QUOTED_NULL_STR;
     static constexpr const char* DOUBLE_QUOTE_CHAR = "\"";
@@ -655,7 +679,7 @@ public:
             UE_LOG_WITH_INFO(LogTemp,
                              Error,
                              TEXT("SceneInstance[%d] [%d] More than %d CustomDepthStencil values having been assigned!"
-                                  "Segmentation Mask will be duplicated!"),
+                                 "Segmentation Mask will be duplicated!"),
                              SceneInstanceId,
                              LatestCustomDepthStencilValue,
                              MAX_CUSTOM_DEPTH_STENCIL_VALUES_NUM);
@@ -687,6 +711,7 @@ UCLASS()
 class RAPYUTASIMULATIONPLUGINS_API URRSceneInstance : public UObject
 {
     GENERATED_BODY()
+
 public:
     virtual void ConfigureStaticClasses();
 

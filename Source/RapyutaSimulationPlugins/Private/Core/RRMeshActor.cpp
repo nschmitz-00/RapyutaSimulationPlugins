@@ -1,6 +1,9 @@
 // Copyright 2020-2023 Rapyuta Robotics Co., Ltd.
 #include "Core/RRMeshActor.h"
 
+// Native
+#include <type_traits>
+
 // RapyutaSimulationPlugins
 #include "Core/RRCoreUtils.h"
 #include "Core/RRGameMode.h"
@@ -10,8 +13,8 @@
 #include "Core/RRStaticMeshComponent.h"
 #include "Core/RRUObjectUtils.h"
 
-using URRMeshComponent =
-    typename TChooseClass<RAPYUTA_RUNTIME_MESH_ENTITY_USE_STATIC_MESH, URRStaticMeshComponent, URRProceduralMeshComponent>::Result;
+using URRMeshComponent = std::conditional_t<
+    RAPYUTA_RUNTIME_MESH_ENTITY_USE_STATIC_MESH, URRStaticMeshComponent, URRProceduralMeshComponent>;
 
 ARRMeshActor::ARRMeshActor()
 {
@@ -36,7 +39,10 @@ bool ARRMeshActor::Initialize()
     {
         ToBeCreatedMeshesNum = ActorInfo->MeshUniqueNameList.Num();
         CreateMeshComponentList<URRMeshComponent>(
-            GetRootComponent(), ActorInfo->MeshUniqueNameList, ActorInfo->MeshRelTransformList, ActorInfo->MaterialNameList);
+            GetRootComponent(),
+            ActorInfo->MeshUniqueNameList,
+            ActorInfo->MeshRelTransformList,
+            ActorInfo->MaterialNameList);
     }
 
     // 2- By default, a mesh actor has its CustomDepthRender enabled, which is cheap, for segmask capturing.
@@ -44,8 +50,9 @@ bool ARRMeshActor::Initialize()
     SetCustomDepthEnabled(true);
 
     // 3- This will take effect on all child mesh components
-    GetRootComponent()->SetMobility((ActorInfo.IsValid() && ActorInfo->bIsStationary) ? EComponentMobility::Stationary
-                                                                                      : EComponentMobility::Movable);
+    GetRootComponent()->SetMobility((ActorInfo.IsValid() && ActorInfo->bIsStationary)
+                                        ? EComponentMobility::Stationary
+                                        : EComponentMobility::Movable);
     return true;
 }
 
@@ -68,14 +75,20 @@ bool ARRMeshActor::HasInitialized(bool bIsLogged) const
         if (meshCompNum)
         {
             UE_LOG_WITH_INFO_NAMED(
-                LogRapyutaCore, Fatal, TEXT("Actor has mesh info [%d] but [MeshCompList] has not been created!"), meshCompNum);
+                LogRapyutaCore,
+                Fatal,
+                TEXT("Actor has mesh info [%d] but [MeshCompList] has not been created!"),
+                meshCompNum);
             return false;
         }
     }
     else if (nullptr == BaseMeshComp)
     {
         UE_LOG_WITH_INFO_NAMED(
-            LogRapyutaCore, Fatal, TEXT("[MeshCompList] [%d] was created but [BaseMeshComp] is NULL!"), meshCompNum);
+            LogRapyutaCore,
+            Fatal,
+            TEXT("[MeshCompList] [%d] was created but [BaseMeshComp] is NULL!"),
+            meshCompNum);
         return false;
     }
 
@@ -170,28 +183,7 @@ void ARRMeshActor::OnBodyComponentMeshCreationDone(bool bInCreationResult, UObje
     bLastMeshCreationResult = (0 == CreatedMeshesNum) ? bInCreationResult : (bLastMeshCreationResult && bInCreationResult);
     if (ToBeCreatedMeshesNum == (++CreatedMeshesNum))
     {
-        // NOTE: Custom appearance may be setup in child class here-in
         DeclareFullCreation(bLastMeshCreationResult);
-
-#if WITH_EDITOR
-        // Gen whole body's thumbnail only after full creation
-        // NOTE: For now, only single-mesh actor is supported
-        if (CreatedMeshesNum == 1)
-        {
-            if (auto* baseStaticMeshComp = Cast<URRStaticMeshComponent>(BaseMeshComp);
-                baseStaticMeshComp && baseStaticMeshComp->bMeshRuntimeCreated)
-            {
-                URRCoreUtils::GenerateThumbnail(
-                    baseStaticMeshComp->GetStaticMesh(),
-                    ThumbnailTools::DefaultThumbnailSize,
-                    ThumbnailTools::DefaultThumbnailSize,
-                    FPackageName::LongPackageNameToFilename(
-                        RRGameSingleton->GetDynamicAssetsBasePath(RAPYUTA_SIMULATION_PLUGINS_MODULE_NAME) /
-                            RRGameSingleton->GetAssetsFolderName(ERRResourceDataType::UE_STATIC_MESH) / EntityModelName,
-                        URRCoreUtils::GetSimFileExt(ERRFileType::IMAGE_JPG)));
-            }
-        }
-#endif
     }
 }
 

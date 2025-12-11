@@ -2,17 +2,24 @@
 
 #include "Sensors/RR3DLidarComponent.h"
 
+#include "Kismet/KismetMathLibrary.h"
+#include "DrawDebugHelpers.h"
+
 // UE
 #include "Async/ParallelFor.h"
 // rclUE
 #include "Msgs/ROS2PointField.h"
 #include "rclcUtilities.h"
+#include "Core/RRConversionUtils.h"
+#include "Components/LineBatchComponent.h"
+#include "logUtilities.h"
 
 URR3DLidarComponent::URR3DLidarComponent()
 {
     TopicName = TEXT("scan");
     MsgClass = UROS2PointCloud2Msg::StaticClass();
 }
+
 void URR3DLidarComponent::TickComponent(float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
     Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
@@ -164,7 +171,7 @@ void URR3DLidarComponent::SensorUpdate()
         {
             if (h.GetActor() != nullptr)
             {
-                float Distance = (MinRange * (h.Distance > 0) + h.Distance) * .01f;
+                float Distance = (MinRange * (h.Distance > 0) + h.Distance) * 0.01f;
                 if (h.PhysMaterial != nullptr)
                 {
                     // retroreflective material
@@ -178,7 +185,7 @@ void URR3DLidarComponent::SensorUpdate()
                                                DrawPointDepthIntensity,
                                                Dt);
                     }
-                    // non reflective material
+                    // non-reflective material
                     else if (h.PhysMaterial->SurfaceType == EPhysicalSurface::SurfaceType_Default)
                     {
                         // UE_LOG_WITH_INFO(LogTemp, Warning, TEXT("default surface type hit"));
@@ -197,15 +204,7 @@ void URR3DLidarComponent::SensorUpdate()
                         RayDirection.Normalize();
 
                         float NormalAlignment = FVector::DotProduct(HitSurfaceNormal, -RayDirection);
-                        NormalAlignment *= NormalAlignment;
-                        NormalAlignment *= NormalAlignment;
-                        NormalAlignment *= NormalAlignment;
-                        NormalAlignment *= NormalAlignment;
-                        NormalAlignment *= NormalAlignment;    // pow 32
-                        // LineBatcher->DrawLine(h.TraceStart, h.ImpactPoint, FLinearColor::LerpUsingHSV(ColorHit, ColorReflected,
-                        // NormalAlignment), 10, .5, dt); NormalAlignment =
-                        // (NormalAlignment*(IntensityReflective-IntensityNonReflective) + IntensityNonReflective)/IntensityMax;
-                        // LineBatcher->DrawPoint(h.ImpactPoint, InterpolateColor(NormalAlignment), 5, 10, dt);
+                        NormalAlignment = FMath::Pow(NormalAlignment, 32);
                         LineBatcher->DrawPoint(
                             h.ImpactPoint,
                             InterpColorFromIntensity(GetIntensityFromDist(
@@ -218,8 +217,7 @@ void URR3DLidarComponent::SensorUpdate()
                 }
                 else
                 {
-                    // UE_LOG_WITH_INFO(LogTemp, Warning, TEXT("no physics material"));
-                    // LineBatcher->DrawLine(h.TraceStart, h.ImpactPoint, ColorHit, 10, .5, dt);
+                    // No physics material case
                     LineBatcher->DrawPoint(h.ImpactPoint,
                                            InterpColorFromIntensity(GetIntensityFromDist(IntensityNonReflective, Distance)),
                                            5,
@@ -229,7 +227,7 @@ void URR3DLidarComponent::SensorUpdate()
             }
             else if (ShowLidarRayMisses)
             {
-                // LineBatcher->DrawLine(h.TraceStart, h.TraceEnd, ColorMiss, 10, .25, dt);
+                // Draw the point for missed hits
                 LineBatcher->DrawPoint(h.TraceEnd, ColorMiss, 2.5, DrawPointDepthIntensity, Dt);
             }
         }
@@ -371,7 +369,7 @@ FROSPointCloud2 URR3DLidarComponent::GetROS2Data()
                     // the dot product for this should always be between 0 and 1
                     const float UnnormalizedIntensity =
                         FMath::Clamp(IntensityNonReflective + (IntensityReflective - IntensityNonReflective) *
-                                                                  FVector::DotProduct(HitSurfaceNormal, -RayDirection),
+                                     FVector::DotProduct(HitSurfaceNormal, -RayDirection),
                                      IntensityNonReflective,
                                      IntensityReflective);
                     if ((UnnormalizedIntensity <= IntensityNonReflective) || (UnnormalizedIntensity <= IntensityReflective))
@@ -383,7 +381,7 @@ FROSPointCloud2 URR3DLidarComponent::GetROS2Data()
             }
             else
             {
-                Intensity = 0;    // std::numeric_limits<float>::quiet_NaN();
+                Intensity = 0; // std::numeric_limits<float>::quiet_NaN();
                 if (!bOrganizedCloud)
                 {
                     continue;
@@ -391,14 +389,15 @@ FROSPointCloud2 URR3DLidarComponent::GetROS2Data()
             }
 
             // Convert pose to local coordinate, ROS unit and double -> float
-            FVector posInDouble = RecordedHits.Last(index).ImpactPoint;    // + BWithNoise * PositionNoise->Get();
+            FVector posInDouble = RecordedHits.Last(index).ImpactPoint; // + BWithNoise * PositionNoise->Get();
             posInDouble = URRGeneralUtils::GetRelativeTransform(
-                              FTransform(GetComponentQuat(), GetComponentLocation(), FVector::OneVector), FTransform(posInDouble))
-                              .GetTranslation();
+                    FTransform(GetComponentQuat(), GetComponentLocation(), FVector::OneVector),
+                    FTransform(posInDouble))
+                .GetTranslation();
             posInDouble = URRConversionUtils::VectorUEToROS(posInDouble);
             pos = FVector3f(posInDouble);
 
-            float time = 0.f;    //temp
+            float time = 0.f; //temp
             memcpy(&retValue.Data[count * POINT_STEP], &pos.X, 4);
             memcpy(&retValue.Data[count * POINT_STEP + 4], &pos.Y, 4);
             memcpy(&retValue.Data[count * POINT_STEP + 8], &pos.Z, 4);

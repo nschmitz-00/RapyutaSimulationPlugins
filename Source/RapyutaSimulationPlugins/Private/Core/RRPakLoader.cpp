@@ -8,6 +8,8 @@
 // RapyutaSimulationPlugins
 #include "Core/RRAssetUtils.h"
 #include "Core/RRGameSingleton.h"
+#include "Core/RRCoreUtils.h"
+#include "logUtilities.h"
 
 bool URRPakLoader::Initialize()
 {

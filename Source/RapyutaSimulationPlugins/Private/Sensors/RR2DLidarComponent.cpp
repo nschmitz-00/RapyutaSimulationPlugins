@@ -7,6 +7,8 @@
 
 // rclUE
 #include "rclcUtilities.h"
+#include "Core/RRConversionUtils.h"
+#include "logUtilities.h"
 
 URR2DLidarComponent::URR2DLidarComponent()
 {

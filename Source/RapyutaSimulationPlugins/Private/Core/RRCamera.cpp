@@ -12,6 +12,7 @@
 #include "Core/RRMathUtils.h"
 #include "Core/RRMeshActor.h"
 #include "Core/RRUObjectUtils.h"
+#include "RapyutaSimulationPlugins.h"
 
 ARRCamera::ARRCamera()
 {
