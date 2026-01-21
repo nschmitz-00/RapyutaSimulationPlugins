@@ -137,6 +137,11 @@ bool URRRobotROS2Interface::InitPublishers()
                 continue;
             }
 
+            if (joint.Key != "base_footprint_joint")
+            {
+                continue;
+            }
+
             const FString* parentLinkName = Robot->Links.FindKey(joint.Value->ParentLink);
             const FString* childLinkName = Robot->Links.FindKey(joint.Value->ChildLink);
             if (!parentLinkName->IsEmpty() && !childLinkName->IsEmpty())
@@ -312,7 +317,7 @@ void URRRobotROS2Interface::UpdateJointState(UROS2GenericMsg* InMessage)
 
     for (const auto& joint : Robot->Joints)
     {
-        if (nullptr == joint.Value)
+        if (nullptr == joint.Value || joint.Key == "base_footprint_joint")
         {
             continue;
         }
@@ -320,6 +325,12 @@ void URRRobotROS2Interface::UpdateJointState(UROS2GenericMsg* InMessage)
         msg.Name.Emplace(joint.Key);
 
         // UE to ROS conversion
+        if (joint.Value->LinearDOF == 0 && joint.Value->RotationalDOF == 0)
+        {
+            msg.Position.Emplace(0.0);
+            msg.Velocity.Emplace(0.0);
+        }
+        
         if (joint.Value->LinearDOF == 1)
         {
             msg.Position.Emplace(URRConversionUtils::DistanceUEToROS(joint.Value->Position[0]));
