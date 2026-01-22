@@ -25,6 +25,7 @@
 
 // Others
 #include "Json.h"
+#include "Drives/RRKinematicJointComponent.h"
 
 ARRBaseRobot::ARRBaseRobot()
 {
@@ -771,3 +772,30 @@ bool ARRBaseRobot::AddJoint(const FString& InParentLinkName,
             *InParentLinkName);
     return true;
 }
+
+bool ARRBaseRobot::AddMimicJointToJoint(const FString& InJointName, const FString& InMimicJointName)
+{
+    if (URRKinematicJointComponent* KinematicJoint = Cast<URRKinematicJointComponent>(*Joints.Find(InJointName)))
+    {
+        if (URRKinematicJointComponent* KinematicMimicJoint = Cast<URRKinematicJointComponent>(*Joints.Find(InMimicJointName)))
+        {
+            KinematicJoint->AddMimicJoint(KinematicMimicJoint);
+            UE_LOG_WITH_INFO_SHORT_NAMED(
+                LogRapyutaCore,
+                Log,
+                TEXT("Set \'%s\' as mimic joint of \'%s\'."),
+                *InMimicJointName,
+                *InJointName);
+            return true;
+        }
+    }
+    UE_LOG_WITH_INFO_SHORT_NAMED(
+            LogRapyutaCore,
+            Error,
+            TEXT("Could not set \'%s\' as mimic joint of \'%s\'. Are both valid Kinematic Joints?"),
+            *InMimicJointName,
+            *InJointName);
+    return false;
+}
+
+

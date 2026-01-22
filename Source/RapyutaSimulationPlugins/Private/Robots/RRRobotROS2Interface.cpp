@@ -137,11 +137,6 @@ bool URRRobotROS2Interface::InitPublishers()
                 continue;
             }
 
-            if (joint.Key != "base_footprint_joint")
-            {
-                continue;
-            }
-
             const FString* parentLinkName = Robot->Links.FindKey(joint.Value->ParentLink);
             const FString* childLinkName = Robot->Links.FindKey(joint.Value->ChildLink);
             if (!parentLinkName->IsEmpty() && !childLinkName->IsEmpty())

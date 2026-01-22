@@ -114,7 +114,7 @@ void ARRROS2GameMode::InitROS2()
     }
 
     // MainROS2Node
-    MainROS2Node = UROS2NodeComponent::CreateNewNode(this, MainROS2NodeName, TEXT("/ue/sim_state"));
+    MainROS2Node = UROS2NodeComponent::CreateNewNode(this, MainROS2NodeName, TEXT(""));
 
     // MainSimState
     if (MainSimState == nullptr)

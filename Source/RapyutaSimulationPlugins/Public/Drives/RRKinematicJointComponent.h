@@ -76,8 +76,16 @@ public:
 
     virtual void MoveToInitPose();
 
+    virtual void AddMimicJoint(URRKinematicJointComponent* JointToMimic);
+
 protected:
     virtual void UpdateState(const float DeltaTime) override;
 
     virtual void UpdateControl(const float DeltaTime) override;
+
+    UPROPERTY()
+    bool HasMimicJoint = false;
+
+    UPROPERTY()
+    URRKinematicJointComponent* MimicJoint = nullptr;
 };

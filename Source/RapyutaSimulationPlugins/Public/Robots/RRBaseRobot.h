@@ -369,6 +369,10 @@ public:
                           const FString& InJointName,
                           URRJointComponent* InJoint);
 
+    UFUNCTION(BlueprintCallable)
+    virtual bool AddMimicJointToJoint(const FString& InJointName,
+                                    const FString& InMimicJointName);
+
     /**
      * Initialize #Joints or not. Initial pose are set in each joint.
      */

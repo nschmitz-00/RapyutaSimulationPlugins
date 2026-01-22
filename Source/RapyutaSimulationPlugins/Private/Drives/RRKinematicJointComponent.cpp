@@ -80,6 +80,11 @@ void URRKinematicJointComponent::UpdateState(const float DeltaTime)
 
 void URRKinematicJointComponent::SetVelocityTarget(const FVector& InLinearVelocity, const FVector& InAngularVelocity)
 {
+    if (HasMimicJoint)
+    {
+        this->MimicJoint->SetVelocityTarget(InLinearVelocity, InAngularVelocity);
+    }
+    
     Super::SetVelocityTarget(InLinearVelocity, InAngularVelocity);
     SetVelocity(InLinearVelocity, InAngularVelocity);
 };
@@ -92,6 +97,11 @@ void URRKinematicJointComponent::SetPose(const FVector& InPosition, const FRotat
 
 void URRKinematicJointComponent::SetPoseTarget(const FVector& InPosition, const FRotator& InOrientation)
 {
+    if (HasMimicJoint)
+    {
+        this->MimicJoint->SetPoseTarget(InPosition, InOrientation);
+    }
+    
     Super::SetPoseTarget(InPosition, InOrientation);
 
     FVector poseDiff = PositionTarget - Position;
@@ -134,3 +144,10 @@ void URRKinematicJointComponent::MoveToInitPose()
     Teleport(InitialPosition, InitialOrientation);
     SetPoseTarget(InitialPosition, InitialOrientation);
 }
+
+void URRKinematicJointComponent::AddMimicJoint(URRKinematicJointComponent* JointToMimic)
+{
+    this->MimicJoint = JointToMimic;
+    this->HasMimicJoint = true;
+}
+
