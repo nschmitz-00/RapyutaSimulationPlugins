@@ -333,7 +333,7 @@ void URRJointComponent::SetPose(const FVector& InPosition, const FRotator& InOri
 
 void URRJointComponent::PoseFromArray(const TArray<float>& InPose, FVector& OutPosition, FRotator& OutOrientation)
 {
-    if (InPose.Num() != LinearDOF + RotationalDOF)
+    if (InPose.Num() != LinearDOF + RotationalDOF && LinearDOF + RotationalDOF != 0)
     {
         UE_LOG_WITH_INFO(
             LogRapyutaCore,
